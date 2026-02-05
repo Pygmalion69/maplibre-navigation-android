@@ -93,6 +93,8 @@ dependencies {
 
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.multidex)
+
+    implementation("com.github.Pygmalion69:ors-android-client:0.2.1")
 }
 
 apply {
