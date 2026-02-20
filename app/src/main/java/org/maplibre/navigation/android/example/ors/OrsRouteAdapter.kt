@@ -74,7 +74,7 @@ object OrsRouteAdapter {
         val mapLibreGeometry = PolylineUtils.encode(routePoints, MAPLIBRE_POLYLINE_PRECISION)
 
         val legs = orsRoute.segments.map { segment ->
-            val mappedSteps = segment.steps.map { step ->
+            val mappedSteps = segment.steps?.map { step ->
                 val wp0 = step.wayPoints.firstOrNull() ?: 0
                 val wp1 = step.wayPoints.getOrNull(1) ?: wp0
 
@@ -120,9 +120,7 @@ object OrsRouteAdapter {
                 )
             }
 
-            val steps = if (mappedSteps.isNotEmpty()) {
-                mappedSteps
-            } else {
+            val steps = mappedSteps?.ifEmpty {
                 listOf(
                     LegStep(
                         geometry = mapLibreGeometry,
@@ -157,9 +155,9 @@ object OrsRouteAdapter {
             }
 
             RouteLeg(
-                distance = steps.sumOf { it.distance } ?: 0.0,
-                duration = steps.sumOf { it.duration } ?: 0.0,
-                steps = steps,
+                distance = steps?.sumOf { it.distance } ?: 0.0,
+                duration = steps?.sumOf { it.duration } ?: 0.0,
+                steps = steps ?: emptyList(),
             )
         }
 
