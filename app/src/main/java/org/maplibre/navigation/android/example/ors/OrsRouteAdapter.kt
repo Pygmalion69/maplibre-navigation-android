@@ -5,6 +5,7 @@ import org.maplibre.navigation.core.models.DirectionsRoute
 import org.maplibre.navigation.core.models.LegStep
 import org.maplibre.navigation.core.models.ManeuverModifier
 import org.maplibre.navigation.core.models.RouteLeg
+import org.maplibre.navigation.core.models.StepIntersection
 import org.maplibre.navigation.core.models.StepManeuver
 import org.nitri.ors.OrsClient
 import org.nitri.ors.Profile
@@ -19,7 +20,8 @@ import org.nitri.ors.domain.route.RouteResponse
  */
 object OrsRouteAdapter {
 
-    private const val POLYLINE_PRECISION = 5
+    private const val ORS_POLYLINE_PRECISION = 5
+    private const val MAPLIBRE_POLYLINE_PRECISION = 6
 
     data class ManeuverHint(
         val type: StepManeuver.Type,
@@ -55,17 +57,16 @@ object OrsRouteAdapter {
 
     fun convert(response: RouteResponse): DirectionsRoute {
         val orsRoute = response.routes.firstOrNull()
-            ?: return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
+            ?: error("ORS RouteResponse.routes is empty")
         val encodedGeometry = orsRoute.geometry
-            ?: return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
+            ?: error("ORS route geometry is null (request must include geometry)")
 
-        val routePoints = PolylineUtils.decode(encodedGeometry, POLYLINE_PRECISION)
-        if (routePoints.isEmpty()) {
-            return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
-        }
+        val routePoints = PolylineUtils.decode(encodedGeometry, ORS_POLYLINE_PRECISION)
+        require(routePoints.isNotEmpty()) { "ORS route geometry decoded to no points" }
+        val mapLibreGeometry = PolylineUtils.encode(routePoints, MAPLIBRE_POLYLINE_PRECISION)
 
         val legs = orsRoute.segments.map { segment ->
-            val steps = segment.steps?.map { step ->
+            val mappedSteps = segment.steps?.map { step ->
                 val wp0 = step.wayPoints.firstOrNull() ?: 0
                 val wp1 = step.wayPoints.getOrNull(1) ?: wp0
 
@@ -74,9 +75,9 @@ object OrsRouteAdapter {
                 val stepGeometry =
                     if (wp1 > wp0 && wp1 < routePoints.size) {
                         val slice = routePoints.subList(wp0, wp1 + 1)
-                        PolylineUtils.encode(slice, POLYLINE_PRECISION)
+                        PolylineUtils.encode(slice, MAPLIBRE_POLYLINE_PRECISION)
                     } else {
-                        encodedGeometry
+                        mapLibreGeometry
                     }
 
                 LegStep(
@@ -84,6 +85,12 @@ object OrsRouteAdapter {
                     distance = step.distance,
                     duration = step.duration,
                     name = step.name,
+                    intersections = listOf(
+                        StepIntersection(
+                            location = maneuverPoint,
+                            geometryIndex = wp0,
+                        )
+                    ),
                     maneuver = StepManeuver(
                         location = maneuverPoint,
                         bearingBefore = 0.0,
@@ -95,6 +102,32 @@ object OrsRouteAdapter {
                 )
             }
 
+            val steps = if (mappedSteps?.isNotEmpty() == true) {
+                mappedSteps
+            } else {
+                listOf(
+                    LegStep(
+                        geometry = mapLibreGeometry,
+                        distance = segment.distance,
+                        duration = segment.duration,
+                        intersections = listOf(
+                            StepIntersection(
+                                location = routePoints.first(),
+                                geometryIndex = 0,
+                            )
+                        ),
+                        maneuver = StepManeuver(
+                            location = routePoints.first(),
+                            bearingBefore = 0.0,
+                            bearingAfter = 0.0,
+                            instruction = "Continue",
+                            type = StepManeuver.Type.DEPART,
+                            modifier = ManeuverModifier.Type.STRAIGHT,
+                        ),
+                    )
+                )
+            }
+
             RouteLeg(
                 distance = steps?.sumOf { it.distance } ?: 0.0,
                 duration = steps?.sumOf { it.duration } ?: 0.0,
@@ -103,7 +136,7 @@ object OrsRouteAdapter {
         }
 
         return DirectionsRoute(
-            geometry = encodedGeometry,
+            geometry = mapLibreGeometry,
             legs = legs,
             distance = orsRoute.summary.distance,
             duration = orsRoute.summary.duration,
