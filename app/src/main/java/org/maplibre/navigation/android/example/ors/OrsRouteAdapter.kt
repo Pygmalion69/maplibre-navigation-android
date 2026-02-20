@@ -20,7 +20,8 @@ import org.nitri.ors.domain.route.RouteResponse
  */
 object OrsRouteAdapter {
 
-    private const val POLYLINE_PRECISION = 5
+    private const val ORS_POLYLINE_PRECISION = 5
+    private const val MAPLIBRE_POLYLINE_PRECISION = 6
 
     data class ManeuverHint(
         val type: StepManeuver.Type,
@@ -60,8 +61,9 @@ object OrsRouteAdapter {
         val encodedGeometry = orsRoute.geometry
             ?: error("ORS route geometry is null (request must include geometry)")
 
-        val routePoints = PolylineUtils.decode(encodedGeometry, POLYLINE_PRECISION)
+        val routePoints = PolylineUtils.decode(encodedGeometry, ORS_POLYLINE_PRECISION)
         require(routePoints.isNotEmpty()) { "ORS route geometry decoded to no points" }
+        val mapLibreGeometry = PolylineUtils.encode(routePoints, MAPLIBRE_POLYLINE_PRECISION)
 
         val legs = orsRoute.segments.map { segment ->
             val mappedSteps = segment.steps.map { step ->
@@ -73,9 +75,9 @@ object OrsRouteAdapter {
                 val stepGeometry =
                     if (wp1 > wp0 && wp1 < routePoints.size) {
                         val slice = routePoints.subList(wp0, wp1 + 1)
-                        PolylineUtils.encode(slice, POLYLINE_PRECISION)
+                        PolylineUtils.encode(slice, MAPLIBRE_POLYLINE_PRECISION)
                     } else {
-                        encodedGeometry
+                        mapLibreGeometry
                     }
 
                 LegStep(
@@ -105,7 +107,7 @@ object OrsRouteAdapter {
             } else {
                 listOf(
                     LegStep(
-                        geometry = encodedGeometry,
+                        geometry = mapLibreGeometry,
                         distance = segment.distance,
                         duration = segment.duration,
                         intersections = listOf(
@@ -134,7 +136,7 @@ object OrsRouteAdapter {
         }
 
         return DirectionsRoute(
-            geometry = encodedGeometry,
+            geometry = mapLibreGeometry,
             legs = legs,
             distance = orsRoute.summary.distance,
             duration = orsRoute.summary.duration,
