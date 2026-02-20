@@ -10,6 +10,11 @@ task accessToken {
             System.out.println("You should set the MAPBOX_ACCESS_TOKEN environment variable.")
             mapboxAccessToken = "YOUR_MAPBOX_ACCESS_TOKEN_GOES_HERE"
         }
+        String orsApiKey = "$System.env.ORS_API_KEY"
+        if (orsApiKey == "null") {
+            System.out.println("You should set the ORS_API_KEY environment variable.")
+            orsApiKey = "YOUR_ORS_API_KEY_GOES_HERE"
+        }
         String tokenFileContents = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<resources>\n" +
                 "    <!-- Your navigation base url (example: https://api.mapbox.com) -->\n" +
@@ -22,6 +27,8 @@ task accessToken {
                 "    <string name=\"graphhopper_url\" translatable=\"false\">https://graphhopper.com/api/1/navigate?key=7088b84f-4cee-4059-96de-fd0cbda2fdff</string>\n" +
                 "    <!-- Your Mapbox access token (example: pk.abc...) -->\n" +
                 "    <string name=\"mapbox_access_token\" translatable=\"false\">" + mapboxAccessToken + "</string>\n" +
+                "    <!-- Your OpenRouteService API key (example: 5b3ce3597851110001cf6248...) -->\n" +
+                "    <string name=\"ors_api_key\" translatable=\"false\">" + orsApiKey + "</string>\n" +
                 "    <!-- Map tile provider for light design (example: https://api.maptiler.com/maps/basic-v2/style.json?key=...) -->\n" +
                 "    <string name=\"map_style_light\" translatable=\"false\">https://tiles.versatiles.org/assets/styles/colorful/style.json</string>\n" +
                 "    <!-- Map tile provider for dark design (example: \"https://api.maptiler.com/maps/basic-v2-dark/style.json?key=...) -->\n" +
