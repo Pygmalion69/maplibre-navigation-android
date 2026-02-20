@@ -7,7 +7,7 @@ import org.maplibre.navigation.core.models.ManeuverModifier
 import org.maplibre.navigation.core.models.RouteLeg
 import org.maplibre.navigation.core.models.StepManeuver
 import org.nitri.ors.OrsClient
-import org.nitri.ors.domain.profile.Profile
+import org.nitri.ors.Profile
 import org.nitri.ors.domain.route.RouteRequest
 import org.nitri.ors.domain.route.RouteResponse
 
@@ -55,15 +55,17 @@ object OrsRouteAdapter {
 
     fun convert(response: RouteResponse): DirectionsRoute {
         val orsRoute = response.routes.firstOrNull()
-            ?: error("ORS RouteResponse.routes is empty")
+            ?: return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
         val encodedGeometry = orsRoute.geometry
-            ?: error("ORS route geometry is null (request must include geometry)")
+            ?: return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
 
         val routePoints = PolylineUtils.decode(encodedGeometry, POLYLINE_PRECISION)
-        require(routePoints.isNotEmpty()) { "ORS route geometry decoded to no points" }
+        if (routePoints.isEmpty()) {
+            return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
+        }
 
         val legs = orsRoute.segments.map { segment ->
-            val steps = segment.steps.map { step ->
+            val steps = segment.steps?.map { step ->
                 val wp0 = step.wayPoints.firstOrNull() ?: 0
                 val wp1 = step.wayPoints.getOrNull(1) ?: wp0
 
@@ -94,9 +96,9 @@ object OrsRouteAdapter {
             }
 
             RouteLeg(
-                distance = steps.sumOf { it.distance },
-                duration = steps.sumOf { it.duration },
-                steps = steps,
+                distance = steps?.sumOf { it.distance } ?: 0.0,
+                duration = steps?.sumOf { it.duration } ?: 0.0,
+                steps = steps ?: emptyList(),
             )
         }
 
