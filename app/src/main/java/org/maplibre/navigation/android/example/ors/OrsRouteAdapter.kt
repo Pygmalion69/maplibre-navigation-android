@@ -8,7 +8,7 @@ import org.maplibre.navigation.core.models.RouteLeg
 import org.maplibre.navigation.core.models.StepIntersection
 import org.maplibre.navigation.core.models.StepManeuver
 import org.nitri.ors.OrsClient
-import org.nitri.ors.domain.profile.Profile
+import org.nitri.ors.Profile
 import org.nitri.ors.domain.route.RouteRequest
 import org.nitri.ors.domain.route.RouteResponse
 
@@ -64,7 +64,7 @@ object OrsRouteAdapter {
         require(routePoints.isNotEmpty()) { "ORS route geometry decoded to no points" }
 
         val legs = orsRoute.segments.map { segment ->
-            val mappedSteps = segment.steps.map { step ->
+            val mappedSteps = segment.steps?.map { step ->
                 val wp0 = step.wayPoints.firstOrNull() ?: 0
                 val wp1 = step.wayPoints.getOrNull(1) ?: wp0
 
@@ -100,7 +100,7 @@ object OrsRouteAdapter {
                 )
             }
 
-            val steps = if (mappedSteps.isNotEmpty()) {
+            val steps = if (mappedSteps?.isNotEmpty() == true) {
                 mappedSteps
             } else {
                 listOf(
@@ -127,9 +127,9 @@ object OrsRouteAdapter {
             }
 
             RouteLeg(
-                distance = steps.sumOf { it.distance },
-                duration = steps.sumOf { it.duration },
-                steps = steps,
+                distance = steps?.sumOf { it.distance } ?: 0.0,
+                duration = steps?.sumOf { it.duration } ?: 0.0,
+                steps = steps ?: emptyList(),
             )
         }
 

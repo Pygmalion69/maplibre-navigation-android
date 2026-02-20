@@ -27,8 +27,8 @@ android {
 
     defaultConfig {
         applicationId = "org.maplibre.navigation.android.example"
-        compileSdk = 35
-        minSdk = 23
+        compileSdk = 36
+        minSdk = 28
 
         versionCode = 1
         versionName = project.properties.get("versionName") as String? ?: "0.0.0"
