@@ -1,6 +1,8 @@
 package org.maplibre.navigation.android.example.ors
 
 import org.maplibre.geojson.utils.PolylineUtils
+import org.maplibre.navigation.core.models.BannerInstructions
+import org.maplibre.navigation.core.models.BannerText
 import org.maplibre.navigation.core.models.DirectionsRoute
 import org.maplibre.navigation.core.models.LegStep
 import org.maplibre.navigation.core.models.ManeuverModifier
@@ -57,11 +59,17 @@ object OrsRouteAdapter {
 
     fun convert(response: RouteResponse): DirectionsRoute {
         val orsRoute = response.routes.firstOrNull()
+            ?: return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
             ?: error("ORS RouteResponse.routes is empty")
         val encodedGeometry = orsRoute.geometry
+            ?: return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
             ?: error("ORS route geometry is null (request must include geometry)")
 
+
         val routePoints = PolylineUtils.decode(encodedGeometry, ORS_POLYLINE_PRECISION)
+        if (routePoints.isEmpty()) {
+            return DirectionsRoute(geometry = "", legs = emptyList(), distance = 0.0, duration = 0.0)
+        }
         require(routePoints.isNotEmpty()) { "ORS route geometry decoded to no points" }
         val mapLibreGeometry = PolylineUtils.encode(routePoints, MAPLIBRE_POLYLINE_PRECISION)
 
@@ -85,6 +93,16 @@ object OrsRouteAdapter {
                     distance = step.distance,
                     duration = step.duration,
                     name = step.name,
+                    bannerInstructions = listOf(
+                        BannerInstructions(
+                            distanceAlongGeometry = step.distance,
+                            primary = BannerText(
+                                text = step.instruction,
+                                type = hint.type,
+                                modifier = hint.modifier,
+                            ),
+                        )
+                    ),
                     intersections = listOf(
                         StepIntersection(
                             location = maneuverPoint,
@@ -102,14 +120,22 @@ object OrsRouteAdapter {
                 )
             }
 
-            val steps = if (mappedSteps?.isNotEmpty() == true) {
-                mappedSteps
-            } else {
+            val steps = mappedSteps?.ifEmpty {
                 listOf(
                     LegStep(
                         geometry = mapLibreGeometry,
                         distance = segment.distance,
                         duration = segment.duration,
+                        bannerInstructions = listOf(
+                            BannerInstructions(
+                                distanceAlongGeometry = segment.distance,
+                                primary = BannerText(
+                                    text = "Continue",
+                                    type = StepManeuver.Type.DEPART,
+                                    modifier = ManeuverModifier.Type.STRAIGHT,
+                                ),
+                            )
+                        ),
                         intersections = listOf(
                             StepIntersection(
                                 location = routePoints.first(),
