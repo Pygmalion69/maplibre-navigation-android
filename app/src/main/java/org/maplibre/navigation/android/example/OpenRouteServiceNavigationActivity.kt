@@ -33,7 +33,7 @@ import org.maplibre.navigation.core.models.DirectionsRoute
 import org.maplibre.navigation.core.models.RouteOptions
 import org.nitri.ors.Ors
 import org.nitri.ors.OrsClient
-import org.nitri.ors.domain.profile.Profile
+import org.nitri.ors.Profile
 import org.nitri.ors.domain.route.RouteRequest
 import timber.log.Timber
 import java.util.Locale
@@ -199,8 +199,6 @@ class OpenRouteServiceNavigationActivity :
                         accessToken = "openrouteservice",
                         voiceInstructions = true,
                         bannerInstructions = true,
-                        steps = true,
-                        geometries = "polyline6",
                         language = language,
                         coordinates = listOf(origin, destination),
                         requestUuid = UUID.randomUUID().toString(),
