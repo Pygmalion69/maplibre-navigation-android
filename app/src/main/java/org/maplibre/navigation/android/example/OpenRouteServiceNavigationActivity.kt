@@ -199,6 +199,8 @@ class OpenRouteServiceNavigationActivity :
                         accessToken = "openrouteservice",
                         voiceInstructions = true,
                         bannerInstructions = true,
+                        steps = true,
+                        geometries = "polyline6",
                         language = language,
                         coordinates = listOf(origin, destination),
                         requestUuid = UUID.randomUUID().toString(),
