@@ -31,6 +31,7 @@ import org.maplibre.navigation.android.navigation.ui.v5.NavigationLauncherOption
 import org.maplibre.navigation.android.navigation.ui.v5.route.NavigationMapRoute
 import org.maplibre.navigation.core.models.DirectionsRoute
 import org.maplibre.navigation.core.models.RouteOptions
+import org.maplibre.navigation.core.models.UnitType
 import org.nitri.ors.Ors
 import org.nitri.ors.OrsClient
 import org.nitri.ors.Profile
@@ -200,6 +201,7 @@ class OpenRouteServiceNavigationActivity :
                         user = "openrouteservice",
                         accessToken = "openrouteservice",
                         voiceInstructions = true,
+                        voiceUnits = UnitType.METRIC,
                         bannerInstructions = true,
                         steps = true,
                         geometries = "polyline6",
