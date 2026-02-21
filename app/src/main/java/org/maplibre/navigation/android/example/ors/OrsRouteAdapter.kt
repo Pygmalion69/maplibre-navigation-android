@@ -101,7 +101,9 @@ object OrsRouteAdapter {
         val mapLibreGeometry = PolylineUtils.encode(routePoints, MAPLIBRE_POLYLINE_PRECISION)
 
         val legs = orsRoute.segments.map { segment ->
-            val mappedSteps = segment.steps?.map { step ->
+            val segmentSteps = segment.steps.orEmpty()
+            val mappedSteps = segmentSteps.mapIndexed { index, step ->
+                val upcomingStep = segmentSteps.getOrNull(index + 1) ?: step
                 val wp0 = step.wayPoints.firstOrNull() ?: 0
                 val wp1 = step.wayPoints.getOrNull(1) ?: wp0
 
@@ -124,15 +126,15 @@ object OrsRouteAdapter {
                         BannerInstructions(
                             distanceAlongGeometry = step.distance,
                             primary = bannerText(
-                                bannerPrimaryText(step.instruction, step.name),
-                                hint,
+                                bannerPrimaryText(upcomingStep.instruction, upcomingStep.name),
+                                orsTypeToMaplibre(upcomingStep.type),
                             ),
                         )
                     ),
                     voiceInstructions = listOf(
                         VoiceInstructions(
                             distanceAlongGeometry = step.distance,
-                            announcement = spokenInstruction(step.instruction, step.name),
+                            announcement = spokenInstruction(upcomingStep.instruction, upcomingStep.name),
                         )
                     ),
                     intersections = listOf(
@@ -152,7 +154,7 @@ object OrsRouteAdapter {
                 )
             }
 
-            val steps = mappedSteps?.ifEmpty {
+            val steps = mappedSteps.ifEmpty {
                 listOf(
                     LegStep(
                         geometry = mapLibreGeometry,
@@ -195,9 +197,9 @@ object OrsRouteAdapter {
             }
 
             RouteLeg(
-                distance = steps?.sumOf { it.distance } ?: 0.0,
-                duration = steps?.sumOf { it.duration } ?: 0.0,
-                steps = steps ?: emptyList(),
+                distance = steps.sumOf { it.distance },
+                duration = steps.sumOf { it.duration },
+                steps = steps,
             )
         }
 
