@@ -31,6 +31,7 @@ import org.maplibre.navigation.android.navigation.ui.v5.NavigationLauncherOption
 import org.maplibre.navigation.android.navigation.ui.v5.route.NavigationMapRoute
 import org.maplibre.navigation.core.models.DirectionsRoute
 import org.maplibre.navigation.core.models.RouteOptions
+import org.maplibre.navigation.core.models.UnitType
 import org.nitri.ors.Ors
 import org.nitri.ors.OrsClient
 import org.nitri.ors.Profile
@@ -93,7 +94,9 @@ class OpenRouteServiceNavigationActivity :
                             .target(LatLng(userLocation.latitude, userLocation.longitude)).build()
                     )
                     .lightThemeResId(R.style.TestNavigationViewLight)
-                    .darkThemeResId(R.style.TestNavigationViewDark)
+                    // Force the navigation session to use the light/day style even when the
+                    // device itself is currently in night mode.
+                    .darkThemeResId(R.style.TestNavigationViewLight)
                     .build()
                 NavigationLauncher.startNavigation(this@OpenRouteServiceNavigationActivity, options)
             }
@@ -198,7 +201,10 @@ class OpenRouteServiceNavigationActivity :
                         user = "openrouteservice",
                         accessToken = "openrouteservice",
                         voiceInstructions = true,
+                        voiceUnits = UnitType.METRIC,
                         bannerInstructions = true,
+                        steps = true,
+                        geometries = "polyline6",
                         language = language,
                         coordinates = listOf(origin, destination),
                         requestUuid = UUID.randomUUID().toString(),

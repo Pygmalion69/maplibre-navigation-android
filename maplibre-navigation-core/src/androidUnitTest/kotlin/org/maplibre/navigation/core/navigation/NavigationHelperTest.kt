@@ -380,6 +380,18 @@ class NavigationHelperTest : BaseTest() {
 
     @Test
     @Throws(Exception::class)
+    fun findCurrentIntersection_emptyIntersectionsReturnsNull() {
+        val currentIntersection = findCurrentIntersection(
+            emptyList(),
+            emptyList(),
+            0.0
+        )
+
+        assertEquals(null, currentIntersection)
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun findUpcomingIntersection_beginningOfStepReturnsSecondIntersection() {
         val routeProgress = buildMultiLegRouteProgress()
         val legProgress: RouteLegProgress = routeProgress.currentLegProgress
