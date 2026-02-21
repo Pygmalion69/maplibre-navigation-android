@@ -26,6 +26,7 @@ object OrsRouteAdapter {
 
     private const val ORS_POLYLINE_PRECISION = 5
     private const val MAPLIBRE_POLYLINE_PRECISION = 6
+    private const val VOICE_INSTRUCTION_LEAD_DISTANCE_METERS = 75.0
 
     data class ManeuverHint(
         val type: StepManeuver.Type,
@@ -55,6 +56,10 @@ object OrsRouteAdapter {
             type = hint.type,
             modifier = hint.modifier,
         )
+    }
+
+    private fun voiceInstructionDistance(stepDistance: Double): Double {
+        return stepDistance.coerceAtMost(VOICE_INSTRUCTION_LEAD_DISTANCE_METERS)
     }
 
     fun orsTypeToMaplibre(orsType: Int): ManeuverHint = when (orsType) {
@@ -133,7 +138,7 @@ object OrsRouteAdapter {
                     ),
                     voiceInstructions = listOf(
                         VoiceInstructions(
-                            distanceAlongGeometry = step.distance,
+                            distanceAlongGeometry = voiceInstructionDistance(step.distance),
                             announcement = spokenInstruction(upcomingStep.instruction, upcomingStep.name),
                         )
                     ),
