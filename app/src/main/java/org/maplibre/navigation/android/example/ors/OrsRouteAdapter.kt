@@ -59,7 +59,11 @@ object OrsRouteAdapter {
     }
 
     private fun voiceInstructionDistance(stepDistance: Double): Double {
-        return stepDistance.coerceAtMost(VOICE_INSTRUCTION_LEAD_DISTANCE_METERS)
+        return if (stepDistance < VOICE_INSTRUCTION_LEAD_DISTANCE_METERS) {
+            0.0
+        } else {
+            VOICE_INSTRUCTION_LEAD_DISTANCE_METERS
+        }
     }
 
     fun orsTypeToMaplibre(orsType: Int): ManeuverHint = when (orsType) {
