@@ -2,6 +2,7 @@ package org.maplibre.navigation.android.example.ors
 
 import org.maplibre.geojson.utils.PolylineUtils
 import org.maplibre.navigation.core.models.BannerInstructions
+import org.maplibre.navigation.core.models.BannerComponents
 import org.maplibre.navigation.core.models.BannerText
 import org.maplibre.navigation.core.models.DirectionsRoute
 import org.maplibre.navigation.core.models.LegStep
@@ -29,6 +30,20 @@ object OrsRouteAdapter {
         val type: StepManeuver.Type,
         val modifier: ManeuverModifier.Type? = null,
     )
+
+    private fun bannerText(text: String, hint: ManeuverHint): BannerText {
+        return BannerText(
+            text = text,
+            components = listOf(
+                BannerComponents(
+                    text = text,
+                    type = BannerComponents.Type.TEXT,
+                )
+            ),
+            type = hint.type,
+            modifier = hint.modifier,
+        )
+    }
 
     fun orsTypeToMaplibre(orsType: Int): ManeuverHint = when (orsType) {
         0 -> ManeuverHint(type = StepManeuver.Type.TURN, modifier = ManeuverModifier.Type.LEFT)
@@ -96,11 +111,10 @@ object OrsRouteAdapter {
                     bannerInstructions = listOf(
                         BannerInstructions(
                             distanceAlongGeometry = step.distance,
-                            primary = BannerText(
-                                text = step.instruction,
-                                type = hint.type,
-                                modifier = hint.modifier,
-                            ),
+                            primary = bannerText(step.instruction, hint),
+                            secondary = step.name
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let { bannerText(it, hint) },
                         )
                     ),
                     intersections = listOf(
@@ -129,10 +143,12 @@ object OrsRouteAdapter {
                         bannerInstructions = listOf(
                             BannerInstructions(
                                 distanceAlongGeometry = segment.distance,
-                                primary = BannerText(
+                                primary = bannerText(
                                     text = "Continue",
-                                    type = StepManeuver.Type.DEPART,
-                                    modifier = ManeuverModifier.Type.STRAIGHT,
+                                    hint = ManeuverHint(
+                                        type = StepManeuver.Type.DEPART,
+                                        modifier = ManeuverModifier.Type.STRAIGHT,
+                                    ),
                                 ),
                             )
                         ),
