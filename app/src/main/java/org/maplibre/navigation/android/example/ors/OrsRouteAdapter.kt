@@ -10,6 +10,7 @@ import org.maplibre.navigation.core.models.ManeuverModifier
 import org.maplibre.navigation.core.models.RouteLeg
 import org.maplibre.navigation.core.models.StepIntersection
 import org.maplibre.navigation.core.models.StepManeuver
+import org.maplibre.navigation.core.models.VoiceInstructions
 import org.nitri.ors.OrsClient
 import org.nitri.ors.Profile
 import org.nitri.ors.domain.route.RouteRequest
@@ -30,6 +31,17 @@ object OrsRouteAdapter {
         val type: StepManeuver.Type,
         val modifier: ManeuverModifier.Type? = null,
     )
+
+    private fun spokenInstruction(stepInstruction: String, stepName: String?): String {
+        return stepName
+            ?.takeIf { it.isNotBlank() }
+            ?.let { "$stepInstruction on $it" }
+            ?: stepInstruction
+    }
+
+    private fun bannerPrimaryText(stepInstruction: String, stepName: String?): String {
+        return stepName?.takeIf { it.isNotBlank() } ?: stepInstruction
+    }
 
     private fun bannerText(text: String, hint: ManeuverHint): BannerText {
         return BannerText(
@@ -111,10 +123,16 @@ object OrsRouteAdapter {
                     bannerInstructions = listOf(
                         BannerInstructions(
                             distanceAlongGeometry = step.distance,
-                            primary = bannerText(step.instruction, hint),
-                            secondary = step.name
-                                ?.takeIf { it.isNotBlank() }
-                                ?.let { bannerText(it, hint) },
+                            primary = bannerText(
+                                bannerPrimaryText(step.instruction, step.name),
+                                hint,
+                            ),
+                        )
+                    ),
+                    voiceInstructions = listOf(
+                        VoiceInstructions(
+                            distanceAlongGeometry = step.distance,
+                            announcement = spokenInstruction(step.instruction, step.name),
                         )
                     ),
                     intersections = listOf(
@@ -150,6 +168,12 @@ object OrsRouteAdapter {
                                         modifier = ManeuverModifier.Type.STRAIGHT,
                                     ),
                                 ),
+                            )
+                        ),
+                        voiceInstructions = listOf(
+                            VoiceInstructions(
+                                distanceAlongGeometry = segment.distance,
+                                announcement = "Continue",
                             )
                         ),
                         intersections = listOf(
