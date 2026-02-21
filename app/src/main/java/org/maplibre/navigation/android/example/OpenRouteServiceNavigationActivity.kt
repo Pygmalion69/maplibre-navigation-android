@@ -93,7 +93,9 @@ class OpenRouteServiceNavigationActivity :
                             .target(LatLng(userLocation.latitude, userLocation.longitude)).build()
                     )
                     .lightThemeResId(R.style.TestNavigationViewLight)
-                    .darkThemeResId(R.style.TestNavigationViewDark)
+                    // Force the navigation session to use the light/day style even when the
+                    // device itself is currently in night mode.
+                    .darkThemeResId(R.style.TestNavigationViewLight)
                     .build()
                 NavigationLauncher.startNavigation(this@OpenRouteServiceNavigationActivity, options)
             }
