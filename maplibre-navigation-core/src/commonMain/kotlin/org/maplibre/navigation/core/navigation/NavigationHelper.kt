@@ -356,8 +356,12 @@ object NavigationHelper {
         measuredIntersections: List<Pair<StepIntersection?, Double>>,
         stepDistanceTraveled: Double
     ): StepIntersection? {
+        if (intersections.isEmpty()) {
+            return null
+        }
+
         for (measuredIntersection in measuredIntersections) {
-            if (measuredIntersection.first == null) return intersections[0]
+            if (measuredIntersection.first == null) return intersections.firstOrNull()
             val intersectionDistance = measuredIntersection.second
             val intersectionIndex = measuredIntersections.indexOf(measuredIntersection)
             val nextIntersectionIndex: Int = intersectionIndex + 1
@@ -375,7 +379,7 @@ object NavigationHelper {
                 return measuredIntersections[FIRST_INTERSECTION].first
             }
         }
-        return intersections[FIRST_INTERSECTION]
+        return intersections.firstOrNull()
     }
 
     /**
