@@ -16,9 +16,19 @@ public class BannerInstructionModel extends InstructionModel {
   public BannerInstructionModel(DistanceFormatter distanceFormatter, RouteProgress progress,
                                 BannerInstructions instructions) {
     super(distanceFormatter, progress);
-    primaryBannerText = instructions.getPrimary();
-    secondaryBannerText = instructions.getSecondary();
-    subBannerText = instructions.getSub();
+    BannerText primary = instructions.getPrimary();
+    BannerText secondary = instructions.getSecondary();
+    BannerText sub = instructions.getSub();
+
+    if (sub != null) {
+      primaryBannerText = sub;
+      secondaryBannerText = null;
+      subBannerText = null;
+    } else {
+      primaryBannerText = primary;
+      secondaryBannerText = secondary;
+      subBannerText = sub;
+    }
   }
 
   BannerText retrievePrimaryBannerText() {
